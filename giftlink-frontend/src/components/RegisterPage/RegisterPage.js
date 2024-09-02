@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-
+import {urlConfig} from '../../config';
 import './RegisterPage.css';
+import { useAppContext } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
 
 function RegisterPage() {
     const [firstName, setFirstName] = useState('');
@@ -9,7 +12,33 @@ function RegisterPage() {
     const [password, setPassword] = useState('');
 
     const handleRegister = async () => {
-        console.log("Register invoked")
+        const response = await fetch(`${urlConfig.backendUrl}/api/auth/register`, {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                password: password
+            })
+        });
+
+        const json = await response.json();
+        console.log('resp', json);
+
+
+        if (json.authtoken) {
+            sessionStorage.setItem('auth-token', json.authtoken);
+            sessionStorage.setItem('name', firstName);
+            sessionStorage.setItem('email', json.email);
+            setIsLoggedIn(true);
+            navigate('/app');
+        }
+        if (json.error) {
+            setShowerr(json.error);
+        }
     }
 
 return (
@@ -56,6 +85,7 @@ return (
                             onChange={(e) => setEmail(e.target.value)}
                         />
                     </div>
+                    <div className="text-danger">{showerr}</div>
 
                     <div className="mb-4">
                         <label htmlFor="password" className="form-label">Password</label>
